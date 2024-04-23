@@ -2,45 +2,47 @@ package heap
 
 import "cmp"
 
-func Init[T any](d []T, k int, less func(d []T, i, j int) bool) bool {
+type LessFunc[T any] func(d []T, i, j int) bool
+
+func Init[T any](d []T, less LessFunc[T]) bool {
 	n := len(d)
 	up := false
 
-	for i := n/k - 1; i >= 0; i-- {
-		up = up || Down(d, k, less, i)
+	for i := n/2 - 1; i >= 0; i-- {
+		up = up || Down(d, less, i)
 	}
 
 	return up
 }
 
-func Push[T any](d []T, k int, less func(d []T, i, j int) bool, e T) []T {
+func Push[T any](d []T, less LessFunc[T], e T) []T {
 	d = append(d, e)
 
-	_ = Up(d, k, less, len(d)-1)
+	_ = Up(d, less, len(d)-1)
 
 	return d
 }
 
-func Pop[T any](d []T, k int, less func(d []T, i, j int) bool) (T, []T) {
+func Pop[T any](d []T, less LessFunc[T]) (T, []T) {
 	r := d[0]
 	n := len(d) - 1
 	d[0] = d[n]
 	d = d[:n]
 
-	_ = Down(d, k, less, 0)
+	_ = Down(d, less, 0)
 
 	return r, d
 }
 
-func Fix[T any](d []T, k int, less func(d []T, i, j int) bool, i int) bool {
-	return Up(d, k, less, i) || Down(d, k, less, i)
+func Fix[T any](d []T, less LessFunc[T], i int) bool {
+	return Up(d, less, i) || Down(d, less, i)
 }
 
-func Up[T any](d []T, k int, less func(d []T, i, j int) bool, i int) bool {
+func Up[T any](d []T, less LessFunc[T], i int) bool {
 	i0 := i
 
 	for {
-		p := (i - 1) / k
+		p := (i - 1) / 2
 
 		if p == i || !less(d, i, p) {
 			break
@@ -54,22 +56,20 @@ func Up[T any](d []T, k int, less func(d []T, i, j int) bool, i int) bool {
 	return i0 != i
 }
 
-func Down[T any](d []T, k int, less func(d []T, i, j int) bool, i int) bool {
+func Down[T any](d []T, less LessFunc[T], i int) bool {
 	n := len(d)
 	i0 := i
 
 	for {
-		b := i*k + 1
+		b := i*2 + 1
 		if b >= n {
 			break
 		}
 
 		j := b
 
-		for c := 1; c < k && b+c < n; c++ {
-			if less(d, b+c, j) {
-				j = b + c
-			}
+		if b+1 < n && less(d, b+1, j) {
+			j = b + 1
 		}
 
 		if !less(d, j, i) {
