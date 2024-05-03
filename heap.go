@@ -15,12 +15,23 @@ func Init[T any](d []T, less LessFunc[T]) bool {
 	return up
 }
 
+func PushTo[T any](d *[]T, less LessFunc[T], e T) {
+	*d = Push(*d, less, e)
+}
+
 func Push[T any](d []T, less LessFunc[T], e T) []T {
 	d = append(d, e)
 
 	_ = Up(d, less, len(d)-1)
 
 	return d
+}
+
+func PopFrom[T any](d *[]T, less LessFunc[T]) T {
+	r, q := Pop(*d, less)
+	*d = q
+
+	return r
 }
 
 func Pop[T any](d []T, less LessFunc[T]) (T, []T) {
