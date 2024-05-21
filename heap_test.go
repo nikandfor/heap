@@ -6,6 +6,7 @@ import (
 )
 
 func BenchmarkHeapInit(tb *testing.B) {
+	var h Stateless[int]
 	less := func(d []int, i, j int) bool { return d[i] < d[j] }
 
 	q := make([]int, 1_000_000)
@@ -21,6 +22,6 @@ func BenchmarkHeapInit(tb *testing.B) {
 	for i := 0; i < tb.N; i++ {
 		copy(d, q)
 
-		Init(d, less)
+		h.Init(d, less)
 	}
 }

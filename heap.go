@@ -2,54 +2,118 @@ package heap
 
 import "cmp"
 
-type LessFunc[T any] func(d []T, i, j int) bool
+type (
+	LessFunc[T any] func(d []T, i, j int) bool
+	SwapFunc[T any] func(d []T, i, j int)
 
-func Init[T any](d []T, less LessFunc[T]) bool {
+	Stateless[T any]     struct{}
+	StatelessSwap[T any] struct{}
+)
+
+func (h Stateless[T]) Init(d []T, less LessFunc[T]) bool {
+	return (StatelessSwap[T]{}).Init(d, less, nil)
+}
+
+func (h Stateless[T]) PushTo(d *[]T, e T, less LessFunc[T]) {
+	(StatelessSwap[T]{}).PushTo(d, e, less, nil)
+}
+
+func (h Stateless[T]) Push(d []T, e T, less LessFunc[T]) []T {
+	return (StatelessSwap[T]{}).Push(d, e, less, nil)
+}
+
+func (h Stateless[T]) PopFrom(d *[]T, less LessFunc[T]) T {
+	return (StatelessSwap[T]{}).PopFrom(d, less, nil)
+}
+
+func (h Stateless[T]) Pop(d []T, less LessFunc[T]) (T, []T) {
+	return (StatelessSwap[T]{}).Pop(d, less, nil)
+}
+
+func (h Stateless[T]) Del(d []T, i int, less LessFunc[T]) []T {
+	return (StatelessSwap[T]{}).Del(d, i, less, nil)
+}
+
+func (h Stateless[T]) Fix(d []T, i int, less LessFunc[T]) bool {
+	return (StatelessSwap[T]{}).Fix(d, i, less, nil)
+}
+
+func (h Stateless[T]) Up(d []T, i int, less LessFunc[T]) bool {
+	return (StatelessSwap[T]{}).Up(d, i, less, nil)
+}
+
+func (h Stateless[T]) Down(d []T, i int, less LessFunc[T]) bool {
+	return (StatelessSwap[T]{}).Down(d, i, less, nil)
+}
+
+func (h StatelessSwap[T]) Init(d []T, less LessFunc[T], swap SwapFunc[T]) bool {
 	n := len(d)
 	up := false
 
 	for i := n/2 - 1; i >= 0; i-- {
-		up = up || Down(d, less, i)
+		up = up || h.Down(d, i, less, swap)
 	}
 
 	return up
 }
 
-func PushTo[T any](d *[]T, less LessFunc[T], e T) {
-	*d = Push(*d, less, e)
+func (h StatelessSwap[T]) PushTo(d *[]T, e T, less LessFunc[T], swap SwapFunc[T]) {
+	*d = h.Push(*d, e, less, swap)
 }
 
-func Push[T any](d []T, less LessFunc[T], e T) []T {
+func (h StatelessSwap[T]) Push(d []T, e T, less LessFunc[T], swap SwapFunc[T]) []T {
 	d = append(d, e)
 
-	_ = Up(d, less, len(d)-1)
+	_ = h.Up(d, len(d)-1, less, swap)
 
 	return d
 }
 
-func PopFrom[T any](d *[]T, less LessFunc[T]) T {
-	r, q := Pop(*d, less)
+func (h StatelessSwap[T]) PopFrom(d *[]T, less LessFunc[T], swap SwapFunc[T]) T {
+	r, q := h.Pop(*d, less, swap)
 	*d = q
 
 	return r
 }
 
-func Pop[T any](d []T, less LessFunc[T]) (T, []T) {
+func (h StatelessSwap[T]) Pop(d []T, less LessFunc[T], swap SwapFunc[T]) (T, []T) {
 	r := d[0]
 	n := len(d) - 1
 	d[0] = d[n]
 	d = d[:n]
 
-	_ = Down(d, less, 0)
+	_ = h.Down(d, 0, less, swap)
 
 	return r, d
 }
 
-func Fix[T any](d []T, less LessFunc[T], i int) bool {
-	return Up(d, less, i) || Down(d, less, i)
+func (h StatelessSwap[T]) Del(d []T, i int, less LessFunc[T], swap SwapFunc[T]) []T {
+	if swap == nil {
+		swap = defswap
+	}
+
+	if i == len(d)-1 {
+		return d[:len(d)-1]
+	}
+
+	swap(d, i, len(d)-1)
+
+	d = d[:len(d)-1]
+
+	h.Fix(d, i, less, swap)
+
+	return d
 }
 
-func Up[T any](d []T, less LessFunc[T], i int) bool {
+func (h StatelessSwap[T]) Fix(d []T, i int, less LessFunc[T], swap SwapFunc[T]) bool {
+	return h.Up(d, i, less, swap) || h.Down(d, i, less, swap)
+}
+
+func (h StatelessSwap[T]) Up(d []T, i int, less LessFunc[T], swap SwapFunc[T]) bool {
+	if swap == nil {
+		swap = defswap
+	}
+
 	i0 := i
 
 	for {
@@ -67,7 +131,11 @@ func Up[T any](d []T, less LessFunc[T], i int) bool {
 	return i0 != i
 }
 
-func Down[T any](d []T, less LessFunc[T], i int) bool {
+func (h StatelessSwap[T]) Down(d []T, i int, less LessFunc[T], swap SwapFunc[T]) bool {
+	if swap == nil {
+		swap = defswap
+	}
+
 	n := len(d)
 	i0 := i
 
@@ -94,7 +162,7 @@ func Down[T any](d []T, less LessFunc[T], i int) bool {
 	return i0 != i
 }
 
-func swap[T any](d []T, i, j int) {
+func defswap[T any](d []T, i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
