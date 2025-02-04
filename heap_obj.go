@@ -12,6 +12,10 @@ func New[T any](less LessFunc[T]) *Heap[T] {
 	return &Heap[T]{Less: less}
 }
 
+func Make[T any](less LessFunc[T]) Heap[T] {
+	return Heap[T]{Less: less}
+}
+
 func (h *Heap[T]) Init(d []T) bool {
 	h.Data = d
 	return h.s.Init(d, h.Less, h.Swap)
@@ -24,7 +28,7 @@ func (h *Heap[T]) Push(e T) {
 }
 
 func (h *Heap[T]) Pop() T {
-	r, d := h.s.Pop(h.Data, h.Less, h.Swap)
+	d, r := h.s.Pop(h.Data, h.Less, h.Swap)
 	h.Data = d
 
 	return r

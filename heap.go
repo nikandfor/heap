@@ -26,7 +26,7 @@ func (h Stateless[T]) PopFrom(d *[]T, less LessFunc[T]) T {
 	return (StatelessSwap[T]{}).PopFrom(d, less, nil)
 }
 
-func (h Stateless[T]) Pop(d []T, less LessFunc[T]) (T, []T) {
+func (h Stateless[T]) Pop(d []T, less LessFunc[T]) ([]T, T) {
 	return (StatelessSwap[T]{}).Pop(d, less, nil)
 }
 
@@ -70,13 +70,13 @@ func (h StatelessSwap[T]) Push(d []T, e T, less LessFunc[T], swap SwapFunc[T]) [
 }
 
 func (h StatelessSwap[T]) PopFrom(d *[]T, less LessFunc[T], swap SwapFunc[T]) T {
-	r, q := h.Pop(*d, less, swap)
+	q, r := h.Pop(*d, less, swap)
 	*d = q
 
 	return r
 }
 
-func (h StatelessSwap[T]) Pop(d []T, less LessFunc[T], swap SwapFunc[T]) (T, []T) {
+func (h StatelessSwap[T]) Pop(d []T, less LessFunc[T], swap SwapFunc[T]) ([]T, T) {
 	r := d[0]
 	n := len(d) - 1
 	d[0] = d[n]
@@ -84,7 +84,7 @@ func (h StatelessSwap[T]) Pop(d []T, less LessFunc[T], swap SwapFunc[T]) (T, []T
 
 	_ = h.Down(d, 0, less, swap)
 
-	return r, d
+	return d, r
 }
 
 func (h StatelessSwap[T]) Del(d []T, i int, less LessFunc[T], swap SwapFunc[T]) []T {
